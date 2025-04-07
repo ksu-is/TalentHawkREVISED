@@ -1,393 +1,582 @@
 import os
-import json
-import numpy as np
+import io
+import base64
+from flask import Flask, render_template, request, redirect, url_for, send_file
 import pandas as pd
-from flask import Flask, render_template, request, redirect, url_for, jsonify
-import plotly
-import plotly.express as px
-import plotly.graph_objects as go
-from sklearn.preprocessing import StandardScaler
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend
+from matplotlib.figure import Figure
 from sklearn.decomposition import PCA
-from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+from scipy.spatial.distance import cosine
 
 app = Flask(__name__)
 
-# Sample player data - in a real application, this would come from a database
-# Each player has various statistical attributes
-SAMPLE_PLAYERS = {
+# Sample player data
+players = {
     "player1": {
         "name": "Lionel Messi",
-        "team": "Inter Miami",
         "position": "Forward",
-        "age": 35,
+        "team": "Inter Miami",
+        "age": 36,
+        "nationality": "Argentina",
+        "market_value": "$35 million",
+        "contract": "2025",
         "stats": {
             "goals": 25,
-            "assists": 15,
-            "pass_accuracy": 88,
-            "shots_on_target": 65,
-            "dribbles_completed": 95,
-            "tackles": 45,
-            "interceptions": 30,
-            "distance_covered": 320,
-            "sprint_speed": 32,
-            "stamina": 85
+            "assists": 18,
+            "minutes_played": 2100,
+            "passing_accuracy": 88,
+            "shots_on_target": 62,
+            "duels_won": 55,
+            "successful_dribbles": 78,
+            "tackles": 24,
+            "interceptions": 12,
+            "distance_covered": 210,
+            "sprint_speed": 28,
+            "aerial_duels_won": 22
         }
     },
     "player2": {
         "name": "Cristiano Ronaldo",
-        "team": "Al-Nassr",
         "position": "Forward",
+        "team": "Al Nassr",
         "age": 38,
+        "nationality": "Portugal",
+        "market_value": "$20 million",
+        "contract": "2024",
         "stats": {
-            "goals": 22,
-            "assists": 8,
-            "pass_accuracy": 80,
-            "shots_on_target": 70,
-            "dribbles_completed": 65,
-            "tackles": 40,
-            "interceptions": 35,
-            "distance_covered": 345,
-            "sprint_speed": 35,
-            "stamina": 90
+            "goals": 30,
+            "assists": 5,
+            "minutes_played": 2250,
+            "passing_accuracy": 76,
+            "shots_on_target": 75,
+            "duels_won": 60,
+            "successful_dribbles": 55,
+            "tackles": 18,
+            "interceptions": 8,
+            "distance_covered": 225,
+            "sprint_speed": 31,
+            "aerial_duels_won": 65
         }
     },
     "player3": {
         "name": "Kevin De Bruyne",
-        "team": "Manchester City",
         "position": "Midfielder",
-        "age": 31,
+        "team": "Manchester City",
+        "age": 32,
+        "nationality": "Belgium",
+        "market_value": "$70 million",
+        "contract": "2025",
         "stats": {
-            "goals": 12,
-            "assists": 20,
-            "pass_accuracy": 92,
-            "shots_on_target": 55,
-            "dribbles_completed": 70,
-            "tackles": 60,
-            "interceptions": 65,
-            "distance_covered": 380,
-            "sprint_speed": 30,
-            "stamina": 88
+            "goals": 10,
+            "assists": 22,
+            "minutes_played": 1950,
+            "passing_accuracy": 92,
+            "shots_on_target": 45,
+            "duels_won": 65,
+            "successful_dribbles": 70,
+            "tackles": 35,
+            "interceptions": 28,
+            "distance_covered": 260,
+            "sprint_speed": 29,
+            "aerial_duels_won": 30
         }
     },
     "player4": {
         "name": "Virgil van Dijk",
-        "team": "Liverpool",
         "position": "Defender",
-        "age": 31,
+        "team": "Liverpool",
+        "age": 32,
+        "nationality": "Netherlands",
+        "market_value": "$45 million",
+        "contract": "2025",
         "stats": {
-            "goals": 5,
-            "assists": 3,
-            "pass_accuracy": 86,
-            "shots_on_target": 30,
-            "dribbles_completed": 40,
-            "tackles": 85,
-            "interceptions": 92,
-            "distance_covered": 360,
-            "sprint_speed": 33,
-            "stamina": 86
+            "goals": 3,
+            "assists": 2,
+            "minutes_played": 2340,
+            "passing_accuracy": 89,
+            "shots_on_target": 10,
+            "duels_won": 85,
+            "successful_dribbles": 25,
+            "tackles": 65,
+            "interceptions": 70,
+            "distance_covered": 220,
+            "sprint_speed": 27,
+            "aerial_duels_won": 90
         }
     },
     "player5": {
         "name": "Kylian Mbappé",
-        "team": "PSG",
         "position": "Forward",
+        "team": "Paris Saint-Germain",
         "age": 24,
+        "nationality": "France",
+        "market_value": "$180 million",
+        "contract": "2024",
         "stats": {
-            "goals": 28,
+            "goals": 35,
             "assists": 12,
-            "pass_accuracy": 82,
-            "shots_on_target": 72,
-            "dribbles_completed": 88,
-            "tackles": 35,
-            "interceptions": 25,
-            "distance_covered": 340,
-            "sprint_speed": 38,
-            "stamina": 89
+            "minutes_played": 2200,
+            "passing_accuracy": 80,
+            "shots_on_target": 70,
+            "duels_won": 62,
+            "successful_dribbles": 85,
+            "tackles": 15,
+            "interceptions": 10,
+            "distance_covered": 235,
+            "sprint_speed": 36,
+            "aerial_duels_won": 25
         }
     },
     "player6": {
-        "name": "Erling Haaland",
-        "team": "Manchester City",
-        "position": "Forward",
-        "age": 22,
-        "stats": {
-            "goals": 32,
-            "assists": 7,
-            "pass_accuracy": 78,
-            "shots_on_target": 80,
-            "dribbles_completed": 60,
-            "tackles": 30,
-            "interceptions": 20,
-            "distance_covered": 330,
-            "sprint_speed": 36,
-            "stamina": 87
-        }
-    },
-    "player7": {
-        "name": "Joshua Kimmich",
-        "team": "Bayern Munich",
+        "name": "N'Golo Kanté",
         "position": "Midfielder",
-        "age": 28,
+        "team": "Al-Ittihad",
+        "age": 32,
+        "nationality": "France",
+        "market_value": "$30 million",
+        "contract": "2026",
         "stats": {
-            "goals": 6,
-            "assists": 14,
-            "pass_accuracy": 90,
-            "shots_on_target": 40,
-            "dribbles_completed": 55,
-            "tackles": 75,
-            "interceptions": 78,
-            "distance_covered": 390,
-            "sprint_speed": 31,
-            "stamina": 92
-        }
-    },
-    "player8": {
-        "name": "Jude Bellingham",
-        "team": "Real Madrid",
-        "position": "Midfielder",
-        "age": 19,
-        "stats": {
-            "goals": 15,
-            "assists": 10,
-            "pass_accuracy": 84,
-            "shots_on_target": 50,
-            "dribbles_completed": 75,
-            "tackles": 65,
-            "interceptions": 60,
-            "distance_covered": 370,
-            "sprint_speed": 34,
-            "stamina": 91
+            "goals": 2,
+            "assists": 8,
+            "minutes_played": 2400,
+            "passing_accuracy": 85,
+            "shots_on_target": 15,
+            "duels_won": 90,
+            "successful_dribbles": 65,
+            "tackles": 95,
+            "interceptions": 90,
+            "distance_covered": 290,
+            "sprint_speed": 32,
+            "aerial_duels_won": 40
         }
     }
 }
 
-# Create a dataframe for analysis
+# Helper functions
 def create_player_df():
+    """Create a pandas DataFrame from player data"""
     data = []
-    for player_id, player_info in SAMPLE_PLAYERS.items():
-        player_data = {
-            'id': player_id,
-            'name': player_info['name'],
-            'team': player_info['team'],
-            'position': player_info['position'],
-            'age': player_info['age']
-        }
-        # Add all stats to the player data
-        for stat, value in player_info['stats'].items():
-            player_data[stat] = value
+    for player_id, player in players.items():
+        player_data = {'id': player_id, 'name': player['name'], 
+                       'position': player['position'], 'team': player['team']}
+        player_data.update(player['stats'])
         data.append(player_data)
     return pd.DataFrame(data)
 
-# Helper function to run PCA on player stats
-def perform_pca(df, features, n_components=2):
-    # Standardize the data
-    scaler = StandardScaler()
-    scaled_data = scaler.fit_transform(df[features])
+def find_similar_players(player_id, n=3):
+    """Find the most similar players to a given player"""
+    df = create_player_df()
+    stats_cols = list(players['player1']['stats'].keys())
     
-    # Apply PCA
-    pca = PCA(n_components=n_components)
-    principal_components = pca.fit_transform(scaled_data)
+    # Create a feature vector for the target player
+    target_vector = df[df['id'] == player_id][stats_cols].values[0]
     
-    # Create a DataFrame with principal components
-    pca_df = pd.DataFrame(
-        data=principal_components,
-        columns=[f'PC{i+1}' for i in range(n_components)]
-    )
+    # Calculate similarity for all other players
+    similarities = {}
+    for pid, p_data in df[df['id'] != player_id].iterrows():
+        player_vector = p_data[stats_cols].values
+        # Using cosine similarity (1 - cosine distance)
+        similarity = 1 - cosine(target_vector, player_vector)
+        similarities[p_data['id']] = similarity
     
-    # Add player information
-    pca_df['id'] = df['id']
-    pca_df['name'] = df['name']
-    pca_df['team'] = df['team']
-    pca_df['position'] = df['position']
-    
-    # Calculate explained variance
-    explained_variance = pca.explained_variance_ratio_
-    
-    return pca_df, explained_variance, pca
+    # Sort by similarity and get top n
+    similar_players = sorted(similarities.items(), key=lambda x: x[1], reverse=True)[:n]
+    return similar_players
 
-# Helper function to find similar players
-def find_similar_players(df, player_id, features, n_similar=3):
-    # Extract features for analysis
-    X = df[features].values
+def generate_radar_chart(player_id):
+    """Generate a radar chart for a player"""
+    player = players[player_id]
+    stats = player['stats']
     
-    # Standardize
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
+    # Select stats to display
+    display_stats = ['goals', 'assists', 'passing_accuracy', 'shots_on_target', 
+                     'duels_won', 'successful_dribbles', 'tackles']
     
-    # Get the index of the selected player
-    player_idx = df[df['id'] == player_id].index[0]
+    # Get values
+    values = [stats[stat] for stat in display_stats]
     
-    # Calculate Euclidean distances to all other players
-    distances = np.sqrt(np.sum((X_scaled - X_scaled[player_idx])**2, axis=1))
+    # Create radar chart
+    fig = plt.figure(figsize=(10, 6))
+    ax = fig.add_subplot(111, polar=True)
     
-    # Get indices of the most similar players (excluding the player itself)
-    similar_indices = np.argsort(distances)[1:n_similar+1]
+    # Number of variables
+    N = len(display_stats)
     
-    # Return the similar players
-    return df.iloc[similar_indices]
+    # What will be the angle of each axis in the plot
+    angles = [n / float(N) * 2 * np.pi for n in range(N)]
+    angles += angles[:1]  # Close the loop
+    
+    # Add the first value again to close the circle
+    values += values[:1]
+    
+    # Draw one axis per variable and add labels
+    plt.xticks(angles[:-1], [stat.replace('_', ' ').title() for stat in display_stats])
+    
+    # Draw the chart
+    ax.plot(angles, values, linewidth=2, linestyle='solid')
+    ax.fill(angles, values, alpha=0.1)
+    
+    # Add title
+    plt.title(f"{player['name']} - Performance Profile", size=15, y=1.1)
+    
+    # Save to in-memory file
+    img = io.BytesIO()
+    plt.tight_layout()
+    plt.savefig(img, format='png')
+    img.seek(0)
+    
+    return img
+
+def generate_comparison_chart(player1_id, player2_id):
+    """Generate a comparison chart for two players"""
+    player1 = players[player1_id]
+    player2 = players[player2_id]
+    
+    # Select stats to display
+    display_stats = ['goals', 'assists', 'passing_accuracy', 'shots_on_target', 
+                     'duels_won', 'successful_dribbles', 'tackles']
+    
+    # Get values
+    values1 = [player1['stats'][stat] for stat in display_stats]
+    values2 = [player2['stats'][stat] for stat in display_stats]
+    
+    # Number of variables
+    N = len(display_stats)
+    
+    # What will be the angle of each axis in the plot
+    angles = [n / float(N) * 2 * np.pi for n in range(N)]
+    angles += angles[:1]  # Close the loop
+    
+    # Add the first value again to close the circle
+    values1 += values1[:1]
+    values2 += values2[:1]
+    
+    # Create figure
+    fig = plt.figure(figsize=(10, 6))
+    ax = fig.add_subplot(111, polar=True)
+    
+    # Draw one axis per variable and add labels
+    plt.xticks(angles[:-1], [stat.replace('_', ' ').title() for stat in display_stats])
+    
+    # Draw the two players
+    ax.plot(angles, values1, linewidth=2, linestyle='solid', label=player1['name'])
+    ax.fill(angles, values1, alpha=0.1)
+    
+    ax.plot(angles, values2, linewidth=2, linestyle='solid', label=player2['name'])
+    ax.fill(angles, values2, alpha=0.1)
+    
+    # Add legend
+    plt.legend(loc='upper right', bbox_to_anchor=(0.1, 0.1))
+    
+    # Add title
+    plt.title(f"Player Comparison: {player1['name']} vs {player2['name']}", size=15, y=1.1)
+    
+    # Save to in-memory file
+    img = io.BytesIO()
+    plt.tight_layout()
+    plt.savefig(img, format='png')
+    img.seek(0)
+    
+    return img
+
+def perform_pca():
+    """Perform PCA on player stats"""
+    df = create_player_df()
+    stats_cols = list(players['player1']['stats'].keys())
+    
+    # Standardize the data
+    X = df[stats_cols].values
+    X_std = StandardScaler().fit_transform(X)
+    
+    # Perform PCA
+    pca = PCA(n_components=2)
+    X_pca = pca.fit_transform(X_std)
+    
+    # Create PCA chart
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    # Define colors for positions
+    position_colors = {
+        'Forward': 'red',
+        'Midfielder': 'blue',
+        'Defender': 'green'
+    }
+    
+    # Plot each player
+    for i, (_, row) in enumerate(df.iterrows()):
+        position = row['position']
+        color = position_colors.get(position, 'gray')
+        ax.scatter(X_pca[i, 0], X_pca[i, 1], c=color, s=100, alpha=0.7)
+        ax.annotate(row['name'], (X_pca[i, 0] + 0.05, X_pca[i, 1] + 0.05))
+    
+    # Add legend
+    for position, color in position_colors.items():
+        ax.scatter([], [], c=color, label=position)
+    
+    ax.legend()
+    ax.set_xlabel('Principal Component 1')
+    ax.set_ylabel('Principal Component 2')
+    ax.set_title('PCA of Player Statistics')
+    ax.grid(True, linestyle='--', alpha=0.7)
+    
+    # Save to in-memory file
+    img = io.BytesIO()
+    plt.tight_layout()
+    plt.savefig(img, format='png')
+    img.seek(0)
+    
+    return img
+
+def generate_correlation_chart():
+    """Generate a correlation heatmap of player stats"""
+    df = create_player_df()
+    stats_cols = list(players['player1']['stats'].keys())
+    
+    # Calculate correlation matrix
+    corr_matrix = df[stats_cols].corr()
+    
+    # Create heatmap
+    fig, ax = plt.subplots(figsize=(12, 10))
+    im = ax.imshow(corr_matrix, cmap='coolwarm')
+    
+    # Add colorbar
+    cbar = ax.figure.colorbar(im, ax=ax)
+    
+    # Set ticks
+    ax.set_xticks(np.arange(len(stats_cols)))
+    ax.set_yticks(np.arange(len(stats_cols)))
+    
+    # Label ticks
+    ax.set_xticklabels([stat.replace('_', ' ').title() for stat in stats_cols], rotation=45, ha='right')
+    ax.set_yticklabels([stat.replace('_', ' ').title() for stat in stats_cols])
+    
+    # Loop over data to create text annotations
+    for i in range(len(stats_cols)):
+        for j in range(len(stats_cols)):
+            text = ax.text(j, i, f"{corr_matrix.iloc[i, j]:.2f}",
+                          ha="center", va="center", color="black" if abs(corr_matrix.iloc[i, j]) < 0.7 else "white")
+    
+    ax.set_title("Correlation of Player Statistics")
+    
+    # Save to in-memory file
+    img = io.BytesIO()
+    plt.tight_layout()
+    plt.savefig(img, format='png')
+    img.seek(0)
+    
+    return img
+
+def generate_distribution_chart(stat):
+    """Generate a distribution chart for a specific stat by position"""
+    df = create_player_df()
+    
+    # Create figure
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    # Get unique positions
+    positions = df['position'].unique()
+    
+    # Plot distribution for each position
+    for position in positions:
+        position_data = df[df['position'] == position]
+        ax.hist(position_data[stat], alpha=0.5, label=position, bins=5)
+    
+    ax.set_xlabel(stat.replace('_', ' ').title())
+    ax.set_ylabel('Number of Players')
+    ax.set_title(f'Distribution of {stat.replace("_", " ").title()} by Position')
+    ax.legend()
+    ax.grid(True, linestyle='--', alpha=0.7)
+    
+    # Save to in-memory file
+    img = io.BytesIO()
+    plt.tight_layout()
+    plt.savefig(img, format='png')
+    img.seek(0)
+    
+    return img
+
+def generate_position_chart(position):
+    """Generate a chart showing average stats for a specific position"""
+    df = create_player_df()
+    stats_cols = list(players['player1']['stats'].keys())
+    
+    # Filter by position
+    position_df = df[df['position'] == position]
+    
+    # Calculate averages
+    avg_stats = position_df[stats_cols].mean()
+    
+    # Create figure
+    fig, ax = plt.subplots(figsize=(12, 6))
+    
+    # Create bar chart
+    ax.bar(range(len(avg_stats)), avg_stats.values, color='skyblue')
+    ax.set_xticks(range(len(avg_stats)))
+    ax.set_xticklabels([stat.replace('_', ' ').title() for stat in avg_stats.index], rotation=45, ha='right')
+    
+    ax.set_ylabel('Average Value')
+    ax.set_title(f'Average Statistics for {position}s')
+    ax.grid(True, linestyle='--', alpha=0.7)
+    
+    # Save to in-memory file
+    img = io.BytesIO()
+    plt.tight_layout()
+    plt.savefig(img, format='png')
+    img.seek(0)
+    
+    return img
+
+def prepare_comparison_stats(player1_id, player2_id):
+    """Prepare comparison statistics for two players"""
+    player1 = players[player1_id]
+    player2 = players[player2_id]
+    
+    comparison = {}
+    for stat, value in player1['stats'].items():
+        p1_value = value
+        p2_value = player2['stats'][stat]
+        
+        # Determine which player is better (higher value is assumed to be better for all stats)
+        p1_better = p1_value > p2_value
+        p2_better = p2_value > p1_value
+        
+        comparison[stat] = {
+            'p1_value': p1_value,
+            'p2_value': p2_value,
+            'p1_better': p1_better,
+            'p2_better': p2_better
+        }
+    
+    return comparison
 
 # Routes
 @app.route('/')
 def index():
-    """Home page with player list"""
-    return render_template('index.html', players=SAMPLE_PLAYERS)
+    """Home page - show player list"""
+    return render_template('index.html', players=players)
 
 @app.route('/player/<player_id>')
 def player_detail(player_id):
     """Player detail page"""
-    if player_id not in SAMPLE_PLAYERS:
-        return redirect(url_for('index'))
-    
-    player = SAMPLE_PLAYERS[player_id]
-    
-    # Create radar chart for the player's stats
-    stats = player['stats']
-    categories = list(stats.keys())
-    values = list(stats.values())
-    
-    # Radar chart
-    fig = go.Figure()
-    fig.add_trace(go.Scatterpolar(
-        r=values,
-        theta=categories,
-        fill='toself',
-        name=player['name']
-    ))
-    fig.update_layout(
-        polar=dict(
-            radialaxis=dict(
-                visible=True,
-                range=[0, 100]
-            )),
-        showlegend=False
-    )
-    
-    radar_chart = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+    if player_id not in players:
+        return redirect('/')
     
     # Find similar players
-    player_df = create_player_df()
-    stat_columns = list(SAMPLE_PLAYERS['player1']['stats'].keys())
-    similar_players = find_similar_players(player_df, player_id, stat_columns)
+    similar_players = find_similar_players(player_id)
     
-    return render_template(
-        'player_detail.html', 
-        player=player, 
-        player_id=player_id, 
-        radar_chart=radar_chart,
-        similar_players=similar_players.to_dict('records')
-    )
+    return render_template('player_detail.html', 
+                           player=players[player_id],
+                           player_id=player_id,
+                           players=players,
+                           similar_players=similar_players)
+
+@app.route('/radar_chart/<player_id>')
+def radar_chart(player_id):
+    """Generate and serve a radar chart for a player"""
+    if player_id not in players:
+        return redirect('/')
+    
+    img = generate_radar_chart(player_id)
+    return send_file(img, mimetype='image/png')
 
 @app.route('/comparison')
-def player_comparison():
-    """Page for comparing multiple players"""
-    player_df = create_player_df()
-    positions = player_df['position'].unique().tolist()
-    return render_template('comparison.html', players=SAMPLE_PLAYERS, positions=positions)
+def comparison():
+    """Player comparison page"""
+    # Get selected players
+    player1_id = request.args.get('player1')
+    player2_id = request.args.get('player2')
+    
+    comparison_stats = None
+    if player1_id and player2_id and player1_id in players and player2_id in players:
+        comparison_stats = prepare_comparison_stats(player1_id, player2_id)
+    
+    return render_template('comparison.html', 
+                          players=players,
+                          selected_player1=player1_id,
+                          selected_player2=player2_id,
+                          comparison_stats=comparison_stats)
 
-@app.route('/api/comparison_chart', methods=['POST'])
+@app.route('/comparison_chart')
 def comparison_chart():
-    """API endpoint to generate comparison charts"""
-    player_ids = request.json.get('player_ids', [])
-    stats = request.json.get('stats', [])
+    """Generate and serve a comparison chart for two players"""
+    player1_id = request.args.get('player1')
+    player2_id = request.args.get('player2')
     
-    if not player_ids or not stats:
-        return jsonify({'error': 'Missing required parameters'})
+    if not player1_id or not player2_id or player1_id not in players or player2_id not in players:
+        # Return a placeholder image if players are not selected
+        fig = plt.figure(figsize=(10, 6))
+        ax = fig.add_subplot(111)
+        ax.text(0.5, 0.5, 'Please select two players to compare', 
+                ha='center', va='center', fontsize=14)
+        ax.axis('off')
+        
+        img = io.BytesIO()
+        plt.savefig(img, format='png')
+        img.seek(0)
+        return send_file(img, mimetype='image/png')
     
-    # Create dataframe of selected players
-    selected_players = []
-    for player_id in player_ids:
-        if player_id in SAMPLE_PLAYERS:
-            player = SAMPLE_PLAYERS[player_id]
-            player_stats = {
-                'id': player_id,
-                'name': player['name'],
-                'team': player['team']
-            }
-            for stat in stats:
-                player_stats[stat] = player['stats'].get(stat, 0)
-            selected_players.append(player_stats)
-    
-    df = pd.DataFrame(selected_players)
-    
-    # Create comparison chart
-    fig = go.Figure()
-    for _, row in df.iterrows():
-        values = [row[stat] for stat in stats]
-        fig.add_trace(go.Scatterpolar(
-            r=values,
-            theta=stats,
-            fill='toself',
-            name=row['name']
-        ))
-    
-    fig.update_layout(
-        polar=dict(
-            radialaxis=dict(
-                visible=True,
-                range=[0, 100]
-            )),
-        showlegend=True
-    )
-    
-    chart_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
-    return jsonify({'chart': chart_json})
+    img = generate_comparison_chart(player1_id, player2_id)
+    return send_file(img, mimetype='image/png')
 
 @app.route('/analytics')
 def analytics():
-    """Advanced analytics page"""
-    player_df = create_player_df()
-    stat_columns = list(SAMPLE_PLAYERS['player1']['stats'].keys())
+    """Analytics dashboard page"""
+    # Get stats and positions
+    stats = list(players['player1']['stats'].keys())
+    positions = list(set(p['position'] for p in players.values()))
     
-    # Perform PCA
-    pca_df, explained_variance, _ = perform_pca(player_df, stat_columns)
+    # Get selected stat and position (or default)
+    selected_stat = request.args.get('stat', 'goals')
+    if selected_stat not in stats:
+        selected_stat = 'goals'
+        
+    selected_position = request.args.get('position', 'Forward')
+    if selected_position not in positions:
+        selected_position = 'Forward'
     
-    # Create scatter plot with PCA results
-    fig = px.scatter(
-        pca_df, x='PC1', y='PC2', 
-        color='position',
-        hover_data=['name', 'team'],
-        labels={
-            'PC1': f'Principal Component 1 ({explained_variance[0]:.2%})',
-            'PC2': f'Principal Component 2 ({explained_variance[1]:.2%})'
-        },
-        title='Player Clustering by Statistical Profile'
-    )
-    
-    pca_chart = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
-    
-    return render_template(
-        'analytics.html', 
-        pca_chart=pca_chart,
-        stats=stat_columns
-    )
+    return render_template('analytics.html',
+                          stats=stats,
+                          positions=positions,
+                          selected_stat=selected_stat,
+                          selected_position=selected_position)
 
-@app.route('/api/pca', methods=['POST'])
-def pca_api():
-    """API endpoint to generate PCA based on selected features"""
-    selected_stats = request.json.get('stats', [])
+@app.route('/pca_chart')
+def pca_chart():
+    """Generate and serve a PCA chart"""
+    img = perform_pca()
+    return send_file(img, mimetype='image/png')
+
+@app.route('/correlation_chart')
+def correlation_chart():
+    """Generate and serve a correlation heatmap"""
+    img = generate_correlation_chart()
+    return send_file(img, mimetype='image/png')
+
+@app.route('/distribution_chart')
+def distribution_chart():
+    """Generate and serve a distribution chart for a specific stat"""
+    stat = request.args.get('stat', 'goals')
+    stats = list(players['player1']['stats'].keys())
+    if stat not in stats:
+        stat = 'goals'
     
-    if not selected_stats:
-        return jsonify({'error': 'No stats selected'})
+    img = generate_distribution_chart(stat)
+    return send_file(img, mimetype='image/png')
+
+@app.route('/position_chart')
+def position_chart():
+    """Generate and serve a chart for a specific position"""
+    position = request.args.get('position', 'Forward')
+    positions = list(set(p['position'] for p in players.values()))
+    if position not in positions:
+        position = 'Forward'
     
-    player_df = create_player_df()
-    
-    # Perform PCA with selected stats
-    pca_df, explained_variance, _ = perform_pca(player_df, selected_stats)
-    
-    # Create scatter plot with PCA results
-    fig = px.scatter(
-        pca_df, x='PC1', y='PC2', 
-        color='position',
-        hover_data=['name', 'team'],
-        labels={
-            'PC1': f'Principal Component 1 ({explained_variance[0]:.2%})',
-            'PC2': f'Principal Component 2 ({explained_variance[1]:.2%})'
-        },
-        title='Player Clustering by Selected Statistics'
-    )
-    
-    pca_chart = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
-    return jsonify({'chart': pca_chart})
+    img = generate_position_chart(position)
+    return send_file(img, mimetype='image/png')
 
 if __name__ == '__main__':
     app.run(debug=True) 

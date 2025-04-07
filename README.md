@@ -1,22 +1,22 @@
 # TalentHawk - Soccer Talent Scouting & Analytics Platform
 
-TalentHawk is a web-based soccer talent scouting and analytics platform built on Python and Flask. It helps professional soccer scouts, coaches, and analysts identify and evaluate talent efficiently through data analytics and player comparisons.
+TalentHawk is a simple web-based soccer talent scouting and analytics platform built on Python, Flask, and Pandas. It helps soccer coaches, scouts, and analysts identify and evaluate talent efficiently through data visualization and player comparisons. This project is designed as a beginner-friendly college-level application.
 
 ## Features
 
 - **Player Profiles**: Detailed statistical profiles of players with key performance metrics
 - **Performance Visualization**: Visual representation of player statistics through radar charts
-- **Player Comparison**: Side-by-side comparison of multiple players on selected statistics
+- **Player Comparison**: Side-by-side comparison of players on selected statistics
 - **Similar Player Analysis**: Find players with similar statistical profiles
-- **Advanced Analytics**: Utilize Principal Component Analysis (PCA) to identify player clusters and patterns
-- **Position-Based Filtering**: Filter and analyze players by position
+- **Basic Analytics**: Analyze player data with visual charts and statistics
+- **Position-Based Analysis**: View statistics grouped by player positions
 
 ## Technologies Used
 
 - **Backend**: Python, Flask
 - **Data Analysis**: Pandas, NumPy, Scikit-learn
-- **Visualization**: Plotly, Bootstrap
-- **Frontend**: HTML/CSS, JavaScript
+- **Visualization**: Matplotlib
+- **Frontend**: Bootstrap (CSS only)
 
 ## Installation & Setup
 
@@ -33,7 +33,7 @@ TalentHawk is a web-based soccer talent scouting and analytics platform built on
 
 3. Run the application:
    ```
-   python talenthawk/app.py
+   python run.py
    ```
 
 4. Open your web browser and navigate to:
@@ -47,33 +47,36 @@ TalentHawk is a web-based soccer talent scouting and analytics platform built on
 talenthawk/
 │
 ├── talenthawk/           # Main application folder
-│   ├── app.py            # Flask application
+│   ├── app.py            # Flask application with all functionality
 │   ├── templates/        # HTML templates
-│   │   ├── base.html     # Base template with common layout
 │   │   ├── index.html    # Home page with player list
 │   │   ├── player_detail.html  # Player profile page
 │   │   ├── comparison.html     # Player comparison page
-│   │   └── analytics.html      # Advanced analytics page
+│   │   └── analytics.html      # Analytics dashboard page
 │   │
-│   ├── static/           # Static files (CSS, JS, images)
-│   └── data/             # Data files
+│   ├── static/           # For static files (currently empty)
+│   └── data/             # For data files (currently contains sample data)
 │
+├── run.py                # Script to run the application
 ├── requirements.txt      # Python dependencies
 └── README.md             # Project documentation
 ```
 
+## Key Implementation Details
+
+- **Pure Server-Side Rendering**: All views are rendered on the server using Flask templates
+- **No JavaScript Dependencies**: The application functions without client-side JavaScript
+- **Matplotlib Integration**: Charts are generated on the server and served as images
+- **Sample Data**: Uses built-in sample data for demonstration purposes
+- **Simple Interface**: Clean, responsive UI using Bootstrap CSS
+
 ## Future Enhancements
 
-1. **Video Analysis**: Integration with SportslabKit's tracking capabilities to analyze player movement from match footage
-2. **Database Integration**: Move from sample data to a real database backend
-3. **Predictive Modeling**: Implement machine learning models to predict player performance
-4. **User Authentication**: Add login system for scouts and analysts
-5. **Custom Reports**: Generate PDF reports for scouted players
-6. **Mobile App**: Develop a companion mobile application for on-the-go scouting
-
-## Acknowledgements
-
-This project is based on the [SportsLabKit](https://github.com/AtomScott/sportslabkit) repository, an open-source toolkit for sports analytics.
+1. **Database Integration**: Move from sample data to a real database backend
+2. **Additional Metrics**: Add more advanced player performance metrics
+3. **User Authentication**: Add login system for scouts and analysts
+4. **Custom Reports**: Generate PDF reports for scouted players
+5. **Data Import/Export**: Allow users to upload/download player data
 
 ## License
 

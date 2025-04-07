@@ -1,149 +1,197 @@
-{% extends "base.html" %}
-
-{% block title %}Advanced Analytics{% endblock %}
-
-{% block content %}
-<div class="row">
-    <div class="col-md-12 mb-4">
-        <h1>Advanced Player Analytics</h1>
-        <p class="lead">Discover patterns and insights using data science techniques.</p>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-3">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">Analysis Options</h5>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TalentHawk - Analytics</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .navbar-brand {
+            font-weight: bold;
+            color: #fff;
+        }
+        .navbar {
+            background-color: #343a40;
+        }
+        .footer {
+            background-color: #343a40;
+            color: white;
+            padding: 1rem 0;
+            margin-top: 2rem;
+        }
+        .analytics-header {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .chart-container {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">TalentHawk</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Players</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/comparison">Comparison</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/analytics">Analytics</a>
+                    </li>
+                </ul>
             </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <label class="form-label">Select Statistics for PCA</label>
-                    <div id="pca-stats-selection">
-                        {% for stat in stats %}
-                        <div class="form-check">
-                            <input class="form-check-input pca-stat" type="checkbox" value="{{ stat }}" id="pca-{{ stat }}" checked>
-                            <label class="form-check-label" for="pca-{{ stat }}">
-                                {{ stat|replace('_', ' ')|title }}
-                            </label>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container my-4">
+        <div class="row">
+            <div class="col-md-12">
+                <a href="/" class="btn btn-outline-primary mb-3">&larr; Back to Players</a>
+                <h1 class="mb-4">Soccer Analytics Dashboard</h1>
+                <p class="lead">Data-driven insights to identify player patterns and evaluate talent.</p>
+            </div>
+        </div>
+
+        <!-- PCA Analysis -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Principal Component Analysis</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>
+                            PCA reduces multiple statistics into principal components that highlight player similarities and differences. 
+                            Players who cluster together share similar statistical profiles.
+                        </p>
+                        <div class="chart-container">
+                            <img src="{{ url_for('pca_chart') }}" alt="PCA Chart" class="img-fluid mx-auto d-block">
                         </div>
-                        {% endfor %}
                     </div>
                 </div>
-                
-                <div class="d-grid mt-3">
-                    <button id="run-pca-btn" class="btn btn-primary">
-                        <i class="fas fa-calculator me-2"></i> Run PCA
-                    </button>
-                </div>
             </div>
         </div>
-        
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">About PCA</h5>
-            </div>
-            <div class="card-body">
-                <p><strong>Principal Component Analysis (PCA)</strong> is a statistical technique that reduces the dimensionality of data while retaining most of the variation.</p>
-                <p>In soccer analytics, PCA helps identify which combination of attributes best explain player differences and similarities.</p>
-                <p>Players clustered together in the PCA chart have similar statistical profiles, even if their raw numbers differ.</p>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-9">
-        <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Player Clustering Analysis</h5>
-                <div>
-                    <span class="badge bg-primary">PCA</span>
-                </div>
-            </div>
-            <div class="card-body">
-                <div id="pca-explanation" class="mb-3">
-                    <p>This chart maps players in a 2D space based on their statistical profile. Players who appear close together have similar playing styles and attributes.</p>
-                    <p>Colors represent different positions, showing how statistical profiles align with traditional positions.</p>
-                </div>
-                
-                <div id="pca-chart" style="height: 500px;"></div>
-                
-                <div class="alert alert-info mt-3">
-                    <i class="fas fa-info-circle me-2"></i> 
-                    <strong>Insight:</strong> The principal components represent combinations of statistics that best explain differences between players. 
-                    Players clustered together may be suitable alternatives for scouting or tactical purposes.
-                </div>
-            </div>
-        </div>
-        
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">Statistical Insights</h5>
-            </div>
-            <div class="card-body">
-                <p>Based on the PCA analysis, we can identify several key insights about player types:</p>
-                <ul>
-                    <li><strong>Forwards</strong> typically score high on goals, shots on target, and sprint speed.</li>
-                    <li><strong>Midfielders</strong> excel in passing accuracy, distance covered, and assists.</li>
-                    <li><strong>Defenders</strong> show strong values in tackles, interceptions, and aerial duels.</li>
-                </ul>
-                <p>These patterns help scouts identify players who may be able to play multiple positions or those who have unique attribute combinations that could provide tactical advantages.</p>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
 
-{% block scripts %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initial PCA chart
-        const initialData = {{ pca_chart|safe }};
-        Plotly.newPlot('pca-chart', initialData.data, initialData.layout);
-        
-        // PCA calculation on selected features
-        const runPcaBtn = document.getElementById('run-pca-btn');
-        const pcaStats = document.querySelectorAll('.pca-stat');
-        
-        runPcaBtn.addEventListener('click', function() {
-            // Get selected stats
-            const selectedStats = [];
-            pcaStats.forEach(checkbox => {
-                if (checkbox.checked) {
-                    selectedStats.push(checkbox.value);
-                }
-            });
-            
-            if (selectedStats.length < 2) {
-                alert('Please select at least 2 statistics for PCA analysis.');
-                return;
-            }
-            
-            // Generate PCA
-            fetch('/api/pca', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    stats: selectedStats
-                }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    alert(data.error);
-                    return;
-                }
-                
-                // Show the PCA chart
-                const chartData = JSON.parse(data.chart);
-                Plotly.newPlot('pca-chart', chartData.data, chartData.layout);
-            })
-            .catch(error => {
-                console.error('Error generating PCA:', error);
-                alert('An error occurred while generating the PCA. Please try again.');
-            });
-        });
-    });
-</script>
-{% endblock %} 
+        <!-- Correlation Analysis -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Stat Correlation Analysis</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>
+                            This heatmap shows correlations between different player statistics. 
+                            Darker colors indicate stronger correlations between the stats.
+                        </p>
+                        <div class="chart-container">
+                            <img src="{{ url_for('correlation_chart') }}" alt="Correlation Heatmap" class="img-fluid mx-auto d-block">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Distribution -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Stat Distributions by Position</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="GET" action="/analytics">
+                            <div class="row mb-4">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="stat">Statistic</label>
+                                        <select class="form-select" id="stat" name="stat">
+                                            {% for stat in stats %}
+                                            <option value="{{ stat }}" {% if selected_stat == stat %}selected{% endif %}>
+                                                {{ stat|replace('_', ' ')|title }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="d-flex align-items-end h-100">
+                                        <button type="submit" class="btn btn-primary mb-3">Update</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+
+                        <div class="chart-container">
+                            <img src="{{ url_for('distribution_chart', stat=selected_stat) }}" 
+                                 alt="Stat Distribution Chart" class="img-fluid mx-auto d-block">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Position Analysis -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Position Analysis</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="GET" action="/analytics">
+                            <div class="row mb-4">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="position">Position</label>
+                                        <select class="form-select" id="position" name="position">
+                                            {% for position in positions %}
+                                            <option value="{{ position }}" {% if selected_position == position %}selected{% endif %}>
+                                                {{ position }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="d-flex align-items-end h-100">
+                                        <button type="submit" class="btn btn-primary mb-3">Update</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+
+                        <div class="chart-container">
+                            <img src="{{ url_for('position_chart', position=selected_position) }}" 
+                                 alt="Position Analysis Chart" class="img-fluid mx-auto d-block">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container text-center">
+            <p>TalentHawk &copy; 2023 - Soccer Talent Scouting Analytics</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

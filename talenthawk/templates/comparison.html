@@ -1,253 +1,206 @@
-{% extends "base.html" %}
-
-{% block title %}Player Comparison{% endblock %}
-
-{% block content %}
-<div class="row">
-    <div class="col-md-12 mb-4">
-        <h1>Player Comparison Tool</h1>
-        <p class="lead">Compare multiple players side by side to identify strengths and weaknesses.</p>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-4">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">Select Players</h5>
-            </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <label class="form-label">Filter by Position</label>
-                    <select id="position-filter" class="form-select">
-                        <option value="all">All Positions</option>
-                        {% for position in positions %}
-                        <option value="{{ position }}">{{ position }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label">Select Players (max 4)</label>
-                    <div id="player-selection">
-                        {% for player_id, player in players.items() %}
-                        <div class="form-check player-option" data-position="{{ player.position }}">
-                            <input class="form-check-input player-checkbox" type="checkbox" value="{{ player_id }}" id="player-{{ player_id }}">
-                            <label class="form-check-label" for="player-{{ player_id }}">
-                                {{ player.name }} ({{ player.team }})
-                            </label>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                
-                <div class="alert alert-warning d-none" id="selection-warning">
-                    Please select at least 2 players to compare.
-                </div>
-            </div>
-        </div>
-        
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">Select Statistics</h5>
-            </div>
-            <div class="card-body">
-                <div id="stat-selection">
-                    {% for stat_name in players.player1.stats.keys() %}
-                    <div class="form-check">
-                        <input class="form-check-input stat-checkbox" type="checkbox" value="{{ stat_name }}" id="stat-{{ stat_name }}" checked>
-                        <label class="form-check-label" for="stat-{{ stat_name }}">
-                            {{ stat_name|replace('_', ' ')|title }}
-                        </label>
-                    </div>
-                    {% endfor %}
-                </div>
-                
-                <div class="alert alert-warning d-none" id="stat-warning">
-                    Please select at least 2 statistics to compare.
-                </div>
-                
-                <div class="d-grid mt-3">
-                    <button id="compare-btn" class="btn btn-primary">
-                        <i class="fas fa-chart-radar me-2"></i> Generate Comparison
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Comparison Results</h5>
-            </div>
-            <div class="card-body">
-                <div id="comparison-chart" style="height: 500px;">
-                    <div class="text-center py-5 text-muted">
-                        <i class="fas fa-chart-bar fa-4x mb-3"></i>
-                        <h4>Select players and statistics</h4>
-                        <p>Choose at least 2 players and statistics, then click "Generate Comparison"</p>
-                    </div>
-                </div>
-                
-                <div id="stats-table" class="mt-4 d-none">
-                    <h5>Detailed Statistics</h5>
-                    <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Statistic</th>
-                                    <th id="table-header-players" colspan="1">Players</th>
-                                </tr>
-                            </thead>
-                            <tbody id="stats-table-body">
-                                <!-- Filled dynamically via JavaScript -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Player filtering by position
-        const positionFilter = document.getElementById('position-filter');
-        const playerOptions = document.querySelectorAll('.player-option');
-        
-        positionFilter.addEventListener('change', function() {
-            const selectedPosition = this.value;
-            
-            playerOptions.forEach(option => {
-                if (selectedPosition === 'all' || option.dataset.position === selectedPosition) {
-                    option.style.display = 'block';
-                } else {
-                    option.style.display = 'none';
-                    const checkbox = option.querySelector('input[type="checkbox"]');
-                    checkbox.checked = false;
-                }
-            });
-        });
-        
-        // Player comparison functionality
-        const compareBtn = document.getElementById('compare-btn');
-        const playerCheckboxes = document.querySelectorAll('.player-checkbox');
-        const statCheckboxes = document.querySelectorAll('.stat-checkbox');
-        const selectionWarning = document.getElementById('selection-warning');
-        const statWarning = document.getElementById('stat-warning');
-        
-        compareBtn.addEventListener('click', function() {
-            // Get selected players
-            const selectedPlayers = [];
-            playerCheckboxes.forEach(checkbox => {
-                if (checkbox.checked) {
-                    selectedPlayers.push(checkbox.value);
-                }
-            });
-            
-            // Get selected stats
-            const selectedStats = [];
-            statCheckboxes.forEach(checkbox => {
-                if (checkbox.checked) {
-                    selectedStats.push(checkbox.value);
-                }
-            });
-            
-            // Validate selections
-            let isValid = true;
-            
-            if (selectedPlayers.length < 2) {
-                selectionWarning.classList.remove('d-none');
-                isValid = false;
-            } else {
-                selectionWarning.classList.add('d-none');
-            }
-            
-            if (selectedStats.length < 2) {
-                statWarning.classList.remove('d-none');
-                isValid = false;
-            } else {
-                statWarning.classList.add('d-none');
-            }
-            
-            if (!isValid) {
-                return;
-            }
-            
-            // Generate comparison
-            fetch('/api/comparison_chart', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    player_ids: selectedPlayers,
-                    stats: selectedStats
-                }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    alert(data.error);
-                    return;
-                }
-                
-                // Show the radar chart
-                const chartData = JSON.parse(data.chart);
-                Plotly.newPlot('comparison-chart', chartData.data, chartData.layout);
-                
-                // Update the stats table
-                updateStatsTable(selectedPlayers, selectedStats);
-            })
-            .catch(error => {
-                console.error('Error generating comparison:', error);
-                alert('An error occurred while generating the comparison. Please try again.');
-            });
-        });
-        
-        // Function to update the statistics table
-        function updateStatsTable(playerIds, stats) {
-            const tableBody = document.getElementById('stats-table-body');
-            const tableHeader = document.getElementById('table-header-players');
-            const playersData = {};
-            const playerNames = [];
-            
-            // Get player data
-            playerIds.forEach(playerId => {
-                fetch(`/player/${playerId}`)
-                    .then(response => response.text())
-                    .then(html => {
-                        // This is a simple approach for this demo - in a real app, 
-                        // you'd want to have a dedicated API endpoint for this data
-                        const parser = new DOMParser();
-                        const doc = parser.parseFromString(html, 'text/html');
-                        const playerName = doc.querySelector('.card-title').textContent.trim();
-                        
-                        playerNames.push(playerName);
-                        tableHeader.colSpan = playerNames.length;
-                        
-                        // Build the table content
-                        let tableContent = '';
-                        stats.forEach(stat => {
-                            tableContent += `<tr>
-                                <td>${stat.replace('_', ' ').charAt(0).toUpperCase() + stat.replace('_', ' ').slice(1)}</td>
-                                ${playerIds.map(id => {
-                                    // This is a simplified solution - in reality, you'd get this from the API
-                                    const playerData = ${JSON.stringify(players)};
-                                    return `<td>${playerData[id].stats[stat]}</td>`;
-                                }).join('')}
-                            </tr>`;
-                        });
-                        
-                        tableBody.innerHTML = tableContent;
-                        document.getElementById('stats-table').classList.remove('d-none');
-                    });
-            });
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TalentHawk - Player Comparison</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .navbar-brand {
+            font-weight: bold;
+            color: #fff;
         }
-    });
-</script>
-{% endblock %} 
+        .navbar {
+            background-color: #343a40;
+        }
+        .footer {
+            background-color: #343a40;
+            color: white;
+            padding: 1rem 0;
+            margin-top: 2rem;
+        }
+        .comparison-header {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .stat-row {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+        .stat-name {
+            font-weight: bold;
+        }
+        .player-better {
+            color: #28a745;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">TalentHawk</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Players</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/comparison">Comparison</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/analytics">Analytics</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container my-4">
+        <div class="row">
+            <div class="col-md-12">
+                <a href="/" class="btn btn-outline-primary mb-3">&larr; Back to Players</a>
+                <h1 class="mb-4">Player Comparison</h1>
+            </div>
+        </div>
+
+        <!-- Player Selection Form -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Select Players to Compare</h5>
+                        <form method="GET" action="/comparison">
+                            <div class="row">
+                                <div class="col-md-5">
+                                    <div class="form-group mb-3">
+                                        <label for="player1">Player 1</label>
+                                        <select class="form-select" id="player1" name="player1" required>
+                                            <option value="" {% if not selected_player1 %}selected{% endif %}>Select Player 1</option>
+                                            {% for player_id, player in players.items() %}
+                                                <option value="{{ player_id }}" {% if selected_player1 == player_id %}selected{% endif %}>
+                                                    {{ player.name }} ({{ player.team }})
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-5">
+                                    <div class="form-group mb-3">
+                                        <label for="player2">Player 2</label>
+                                        <select class="form-select" id="player2" name="player2" required>
+                                            <option value="" {% if not selected_player2 %}selected{% endif %}>Select Player 2</option>
+                                            {% for player_id, player in players.items() %}
+                                                <option value="{{ player_id }}" {% if selected_player2 == player_id %}selected{% endif %}>
+                                                    {{ player.name }} ({{ player.team }})
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-primary w-100 mb-3">Compare</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if selected_player1 and selected_player2 %}
+        <!-- Comparison Results -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="comparison-header">
+                    <div class="row text-center">
+                        <div class="col-md-5">
+                            <h2>{{ players[selected_player1].name }}</h2>
+                            <p class="text-muted">{{ players[selected_player1].position }} | {{ players[selected_player1].team }}</p>
+                        </div>
+                        <div class="col-md-2">
+                            <h4 class="mt-3">VS</h4>
+                        </div>
+                        <div class="col-md-5">
+                            <h2>{{ players[selected_player2].name }}</h2>
+                            <p class="text-muted">{{ players[selected_player2].position }} | {{ players[selected_player2].team }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comparison Chart -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Visual Comparison</h5>
+                        <img src="{{ url_for('comparison_chart', player1=selected_player1, player2=selected_player2) }}" 
+                             alt="Player Comparison Chart" 
+                             class="img-fluid mx-auto d-block">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Stats Comparison -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Detailed Statistics Comparison</h5>
+                        
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Statistic</th>
+                                        <th class="text-center">{{ players[selected_player1].name }}</th>
+                                        <th class="text-center">{{ players[selected_player2].name }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for stat, values in comparison_stats.items() %}
+                                    <tr>
+                                        <td class="stat-name">{{ stat|replace('_', ' ')|title }}</td>
+                                        <td class="text-center {% if values.p1_better %}player-better{% endif %}">
+                                            {{ values.p1_value }}
+                                        </td>
+                                        <td class="text-center {% if values.p2_better %}player-better{% endif %}">
+                                            {{ values.p2_value }}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container text-center">
+            <p>TalentHawk &copy; 2023 - Soccer Talent Scouting Analytics</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

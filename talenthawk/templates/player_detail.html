@@ -1,1 +1,102 @@
- 
+{% extends "base.html" %}
+
+{% block title %}{{ player.name }} - Player Profile{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Players</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ player.name }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="card-title">{{ player.name }}</h2>
+                <h5 class="card-subtitle mb-3 text-muted">{{ player.position }}</h5>
+                
+                <div class="player-info mb-3">
+                    <p><strong>Team:</strong> {{ player.team }}</p>
+                    <p><strong>Age:</strong> {{ player.age }}</p>
+                    <p><strong>Position:</strong> {{ player.position }}</p>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('comparison') }}" class="btn btn-primary">
+                        <i class="fas fa-chart-bar me-2"></i> Compare with Others
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Similar Players</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    {% for similar_player in similar_players %}
+                    <a href="{{ url_for('player_detail', player_id=similar_player.id) }}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ similar_player.name }}</h6>
+                            <small>{{ similar_player.position }}</small>
+                        </div>
+                        <small class="text-muted">{{ similar_player.team }}</small>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Performance Profile</h5>
+            </div>
+            <div class="card-body">
+                <div id="radar-chart" style="height: 400px;"></div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Detailed Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for stat_name, stat_value in player.stats.items() %}
+                    <div class="col-md-6">
+                        <div class="stat-item">
+                            <div class="d-flex justify-content-between">
+                                <span class="stat-name">{{ stat_name|replace('_', ' ')|title }}</span>
+                                <span class="stat-value">{{ stat_value }}</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: {{ stat_value }}%;" 
+                                    aria-valuenow="{{ stat_value }}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const data = {{ radar_chart|safe }};
+        Plotly.newPlot('radar-chart', data.data, data.layout);
+    });
+</script>
+{% endblock %} 

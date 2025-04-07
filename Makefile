@@ -1,5 +1,5 @@
 .ONESHELL:
-.PHONY: clean data lint requirements tests create_environment install_develop develop_tests full_develop_test pyupgrade autofix all_checks ruff mypy docstring help
+.PHONY: clean data lint requirements tests create_environment install_develop develop_tests full_develop_test pyupgrade autofix all_checks ruff mypy docstring help install test run format
 
 #################################################################################
 # GLOBALS                                                                       #
@@ -15,8 +15,12 @@ CONDA_ACTIVATE=source $$(conda info --base)/etc/profile.d/conda.sh ; conda activ
 
 ## Delete all compiled Python files
 clean:
-	find . -type f -name "*.py[co]" -delete
-	find . -type d -name "__pycache__" -delete
+	@echo "Cleaning up..."
+	rm -rf build/
+	rm -rf dist/
+	rm -rf *.egg-info
+	find . -type d -name __pycache__ -exec rm -rf {} +
+	find . -type f -name "*.pyc" -delete
 
 ## Lint using ruff
 ruff:
@@ -73,6 +77,31 @@ develop_tests: install_develop
 ## Full test cycle on develop branch
 full_develop_test: create_environment install_develop develop_tests
 
+## Install dependencies
+install:
+	@echo "Installing dependencies..."
+	pip install -r requirements.txt
+	pip install -e .
+
+## Run tests
+test:
+	@echo "Running tests..."
+	python -m unittest discover -s tests
+
+## Run application
+run:
+	@echo "Running application..."
+	python run.py
+
+## Lint code
+lint:
+	@echo "Linting code..."
+	flake8 talenthawk tests
+
+## Format code
+format:
+	@echo "Formatting code..."
+	black talenthawk tests
 
 #################################################################################
 # Self Documenting Commands                                                     #

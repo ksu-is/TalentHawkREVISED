@@ -1,0 +1,7 @@
+include LICENSE
+include README.md
+include SUMMARY.md
+include requirements.txt
+recursive-include talenthawk/templates *
+recursive-include talenthawk/static *
+recursive-include talenthawk/data * 

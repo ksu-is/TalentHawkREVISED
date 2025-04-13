@@ -1,33 +1,8 @@
-x_ignore/*
-external/*
-logs/*
-models/*
-data/*
-docs/autoapi
-docs/README.md
-docs/contributing.md
-sportslabkit/datasets/GNSS
-sportslabkit/datasets/top-view
-sportslabkit/datasets/top_view
-sportslabkit/datasets/wide-view
-sportslabkit/datasets/wide_view
-sportslabkit/datasets/*.json
-tests/outputs/
-outputs/
-bin/*
-
-# Ignore model checkpoints
-*.pt
-
-# Byte-compiled / optimized / DLL files
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
 *.so
-
-# Distribution / packaging
 .Python
 env/
 build/
@@ -41,114 +16,20 @@ lib64/
 parts/
 sdist/
 var/
-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
 
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
+# Virtual Environment
+venv/
+ENV/
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-.hypothesis/
-.pytest_cache/
-
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-target/
-
-# DotEnv configuration
-.env
-
-# Database
-*.db
-*.rdb
-
-# Pycharm
-.idea
-
-# VS Code
+# IDE
+.idea/
 .vscode/
-
-# Spyder
-.spyproject/
-
-# Jupyter NB Checkpoints
-.ipynb_checkpoints/
-
-# Mac OS-specific storage files
-.DS_Store
-
-# vim
 *.swp
 *.swo
 
-# Mypy cache
-.mypy_cache/
-
-# Don't ignore the .gitignore file
-!.gitignore
-
-# Don't ignore the .gitkeep file
-!.gitkeep
-
-# pyenv
-.python-version
-
-# celery beat schedule file
-celerybeat-schedule
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
+# OS
+.DS_Store
+Thumbs.db

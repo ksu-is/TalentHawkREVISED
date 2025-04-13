@@ -29,6 +29,127 @@
         .chart-container {
             margin-bottom: 20px;
         }
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .chart-title {
+            font-size: 1.2em;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #0066cc;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .stats-summary {
+            background-color: #f5f5f5;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        .stat-box {
+            background-color: white;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            padding: 15px;
+            text-align: center;
+        }
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+        }
+        .analytics-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-top: 20px;
+        }
+        .chart-card {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .nav-link {
+            color: #0066cc;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            background-color: #f5f5f5;
+        }
+        .nav-link:hover {
+            background-color: #e5e5e5;
+        }
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        .chart-container {
+            background-color: #f5f5f5;
+            border-radius: 5px;
+            padding: 20px;
+            text-align: center;
+        }
+        .chart-container h2 {
+            color: #333;
+            margin: 0 0 20px 0;
+        }
+        .chart-container img {
+            max-width: 100%;
+            height: auto;
+        }
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 40px;
+        }
+        .stats-table th,
+        .stats-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .stats-table th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+        .stats-table tr:hover {
+            background-color: #f9f9f9;
+        }
     </style>
 </head>
 <body>
@@ -65,123 +186,72 @@
             </div>
         </div>
 
-        <!-- PCA Analysis -->
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Principal Component Analysis</h5>
-                    </div>
-                    <div class="card-body">
-                        <p>
-                            PCA reduces multiple statistics into principal components that highlight player similarities and differences. 
-                            Players who cluster together share similar statistical profiles.
-                        </p>
-                        <div class="chart-container">
-                            <img src="{{ url_for('pca_chart') }}" alt="PCA Chart" class="img-fluid mx-auto d-block">
-                        </div>
-                    </div>
+        <div class="stats-summary">
+            <h2>Overall Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-label">Total Players</div>
+                    <div class="stat-value">{{ total_players }}</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Average Age</div>
+                    <div class="stat-value">{{ avg_age }}</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Average Goals</div>
+                    <div class="stat-value">{{ avg_goals }}</div>
                 </div>
             </div>
         </div>
 
-        <!-- Correlation Analysis -->
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Stat Correlation Analysis</h5>
-                    </div>
-                    <div class="card-body">
-                        <p>
-                            This heatmap shows correlations between different player statistics. 
-                            Darker colors indicate stronger correlations between the stats.
-                        </p>
-                        <div class="chart-container">
-                            <img src="{{ url_for('correlation_chart') }}" alt="Correlation Heatmap" class="img-fluid mx-auto d-block">
-                        </div>
-                    </div>
-                </div>
+        <div class="analytics-grid">
+            <div class="chart-container">
+                <h2>Player Positions Distribution</h2>
+                {% if positions_chart %}
+                <img src="data:image/png;base64,{{ positions_chart }}" alt="Positions Distribution">
+                {% endif %}
+            </div>
+
+            <div class="chart-container">
+                <h2>Age Distribution</h2>
+                {% if age_chart %}
+                <img src="data:image/png;base64,{{ age_chart }}" alt="Age Distribution">
+                {% endif %}
             </div>
         </div>
 
-        <!-- Stats Distribution -->
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Stat Distributions by Position</h5>
-                    </div>
-                    <div class="card-body">
-                        <form method="GET" action="/analytics">
-                            <div class="row mb-4">
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="stat">Statistic</label>
-                                        <select class="form-select" id="stat" name="stat">
-                                            {% for stat in stats %}
-                                            <option value="{{ stat }}" {% if selected_stat == stat %}selected{% endif %}>
-                                                {{ stat|replace('_', ' ')|title }}
-                                            </option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="d-flex align-items-end h-100">
-                                        <button type="submit" class="btn btn-primary mb-3">Update</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-
-                        <div class="chart-container">
-                            <img src="{{ url_for('distribution_chart', stat=selected_stat) }}" 
-                                 alt="Stat Distribution Chart" class="img-fluid mx-auto d-block">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Position Analysis -->
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Position Analysis</h5>
-                    </div>
-                    <div class="card-body">
-                        <form method="GET" action="/analytics">
-                            <div class="row mb-4">
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="position">Position</label>
-                                        <select class="form-select" id="position" name="position">
-                                            {% for position in positions %}
-                                            <option value="{{ position }}" {% if selected_position == position %}selected{% endif %}>
-                                                {{ position }}
-                                            </option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="d-flex align-items-end h-100">
-                                        <button type="submit" class="btn btn-primary mb-3">Update</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-
-                        <div class="chart-container">
-                            <img src="{{ url_for('position_chart', position=selected_position) }}" 
-                                 alt="Position Analysis Chart" class="img-fluid mx-auto d-block">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <table class="stats-table">
+            <thead>
+                <tr>
+                    <th>Player</th>
+                    <th>Position</th>
+                    <th>Age</th>
+                    <th>Goals</th>
+                    <th>Assists</th>
+                    <th>Pass Accuracy</th>
+                    <th>Shots on Target</th>
+                    <th>Key Passes</th>
+                    <th>Tackles</th>
+                    <th>Interceptions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for player in players %}
+                <tr>
+                    <td>{{ player.name }}</td>
+                    <td>{{ player.position }}</td>
+                    <td>{{ player.age }}</td>
+                    <td>{{ player.goals }}</td>
+                    <td>{{ player.assists }}</td>
+                    <td>{{ player.passing_accuracy }}%</td>
+                    <td>{{ player.shots_on_target }}</td>
+                    <td>{{ player.key_passes }}</td>
+                    <td>{{ player.tackles }}</td>
+                    <td>{{ player.interceptions }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 
     <!-- Footer -->

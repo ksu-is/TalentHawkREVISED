@@ -1,6 +1,6 @@
 # TalentHawk - Simple Soccer Player Analytics
 
-A beginner-friendly web application for comparing soccer player statistics. Built with Python, Flask, and basic HTML/CSS.
+A beginner-friendly web application for comparing soccer player statistics. Built with Python, Flask, and HTML/CSS.
 
 ## What This App Does
 
@@ -26,23 +26,44 @@ A beginner-friendly web application for comparing soccer player statistics. Buil
 
 ```
 talenthawk/
-├── app.py              # Main application file
-├── templates/          # HTML files
-│   ├── index.html     # Home page
-│   ├── player_detail.html    # Player stats page
-│   ├── comparison.html      # Compare players page
-│   └── analytics.html       # Statistics page
-├── static/            # For CSS and images (empty for now)
+├── app.py              # Main Python file (Flask application)
+├── templates/          # HTML template files
+│   ├── index.html     # Home page - shows list of all players
+│   ├── player_detail.html    # Shows detailed stats for one player
+│   ├── comparison.html      # Lets you compare two players
+│   └── analytics.html       # Shows charts and statistics
+├── static/            # For CSS styles (empty for now)
 └── data/             # For player data (empty for now)
 ```
 
+## How It Works
+
+1. **Python (app.py)**
+   - Handles all the data processing
+   - Creates the charts and statistics
+   - Connects to the web pages
+
+2. **HTML Templates**
+   - `index.html`: Shows a grid of player cards
+   - `player_detail.html`: Shows one player's stats and charts
+   - `comparison.html`: Shows two players side by side
+   - `analytics.html`: Shows charts and statistics
+
+3. **Data Flow**
+   - Python reads player data
+   - Processes it with Pandas
+   - Creates charts with Matplotlib
+   - Sends everything to HTML templates
+   - Shows the result in your browser
+
 ## Technologies Used
 
-- Python: Main programming language
-- Flask: Web framework
-- Pandas: Data handling
-- Matplotlib: Creating charts
-- HTML/CSS: Web pages
+- **Python**: The main programming language
+- **Flask**: Makes the web application
+- **HTML**: Creates the web pages
+- **CSS**: Makes the pages look nice
+- **Pandas**: Handles the player data
+- **Matplotlib**: Creates the charts
 
 ## Sample Players
 
@@ -53,6 +74,13 @@ The app comes with sample data for these players:
 - Kylian Mbappé
 - Kevin De Bruyne
 - Mohamed Salah
+
+## Testing
+
+To run the tests:
+```
+pytest tests/test_app.py
+```
 
 ## License
 

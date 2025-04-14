@@ -15,12 +15,12 @@ def test_home_page(client):
 
 def test_player_detail(client):
     """Test that player detail page loads"""
-    response = client.get('/player/1')
+    response = client.get('/player/messi')
     assert response.status_code == 200
 
 def test_comparison_page(client):
     """Test that comparison page loads"""
-    response = client.get('/comparison')
+    response = client.get('/compare')
     assert response.status_code == 200
 
 def test_analytics_page(client):

@@ -26,14 +26,23 @@ A beginner-friendly web application for comparing soccer player statistics. Buil
 
 ```
 talenthawk/
-├── app.py              # Main Python file (Flask application)
-├── templates/          # HTML template files
-│   ├── index.html     # Home page - shows list of all players
-│   ├── player_detail.html    # Shows detailed stats for one player
-│   ├── comparison.html      # Lets you compare two players
-│   └── analytics.html       # Shows charts and statistics
-├── static/            # For CSS styles (empty for now)
-└── data/             # For player data (empty for now)
+├── talenthawk/           # Main application folder
+│   ├── app.py            # Flask application with all functionality
+│   ├── templates/        # HTML templates
+│   │   ├── index.html    # Home page with player list
+│   │   ├── player_detail.html  # Player profile page
+│   │   ├── comparison.html     # Player comparison page
+│   │   └── analytics.html      # Analytics dashboard page
+│   │
+│   ├── static/           # For static files (currently empty)
+│   └── data/             # For data files (currently contains sample data)
+│
+├── presentations/        # Project presentations
+│   └── Talent Hawk PP (2).pptx  # Final project presentation
+│
+├── run.py                # Script to run the application
+├── requirements.txt      # Python dependencies
+└── README.md             # Project documentation
 ```
 
 ## How It Works

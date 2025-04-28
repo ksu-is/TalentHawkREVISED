@@ -114,9 +114,9 @@
     </div>
 
     <div class="nav-links">
-        <a href="/" class="nav-link">Players</a>
-        <a href="/comparison" class="nav-link">Compare Players</a>
-        <a href="/analytics" class="nav-link">Analytics</a>
+        <a href="{{ url_for('home') }}" class="nav-link">Players</a>
+        <a href="{{ url_for('compare_players') }}" class="nav-link">Compare Players</a>
+        <a href="{{ url_for('analytics') }}" class="nav-link">Analytics</a>
     </div>
 
     <div class="player-info">
@@ -133,11 +133,23 @@
                 </div>
                 <div class="stat-item">
                     <div class="stat-label">Goals</div>
-                    <div class="stat-value">{{ player.goals }}</div>
+                    <div class="stat-value">{{ player.stats.goals }}</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-label">Assists</div>
-                    <div class="stat-value">{{ player.assists }}</div>
+                    <div class="stat-value">{{ player.stats.assists }}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Passing</div>
+                    <div class="stat-value">{{ player.stats.passing }}%</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Shots</div>
+                    <div class="stat-value">{{ player.stats.shots }}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Dribbles</div>
+                    <div class="stat-value">{{ player.stats.dribbles }}</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-label">Pass Accuracy</div>

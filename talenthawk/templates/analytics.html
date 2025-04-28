@@ -150,6 +150,12 @@
         .stats-table tr:hover {
             background-color: #f9f9f9;
         }
+        .content {
+            text-align: center;
+            padding: 50px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
@@ -228,11 +234,11 @@
                     <th>Age</th>
                     <th>Goals</th>
                     <th>Assists</th>
-                    <th>Pass Accuracy</th>
-                    <th>Shots on Target</th>
-                    <th>Key Passes</th>
-                    <th>Tackles</th>
-                    <th>Interceptions</th>
+                    <th>Passing %</th>
+                    <th>Shots</th>
+                    <th>Dribbles</th>
+                    
+                    
                 </tr>
             </thead>
             <tbody>
@@ -241,13 +247,13 @@
                     <td>{{ player.name }}</td>
                     <td>{{ player.position }}</td>
                     <td>{{ player.age }}</td>
-                    <td>{{ player.goals }}</td>
-                    <td>{{ player.assists }}</td>
-                    <td>{{ player.passing_accuracy }}%</td>
-                    <td>{{ player.shots_on_target }}</td>
-                    <td>{{ player.key_passes }}</td>
-                    <td>{{ player.tackles }}</td>
-                    <td>{{ player.interceptions }}</td>
+                    <td>{{ player.stats.goals }}</td>
+                    <td>{{ player.stats.assists }}</td>
+                    <td>{{ player.stats.passing }}%</td>
+                    <td>{{ player.stats.shots }}</td>
+                    <td>{{ player.stats.dribbles }}</td>
+                    
+                    
                 </tr>
                 {% endfor %}
             </tbody>

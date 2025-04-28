@@ -84,14 +84,14 @@
     </div>
 
     <div class="nav-links">
-        <a href="/" class="nav-link">Players</a>
-        <a href="/comparison" class="nav-link">Compare Players</a>
-        <a href="/analytics" class="nav-link">Analytics</a>
+        <a href="{{ url_for('home') }}" class="nav-link">Players</a>
+        <a href="{{ url_for('compare_players') }}" class="nav-link">Compare Players</a>
+        <a href="{{ url_for('analytics') }}" class="nav-link">Analytics</a>
     </div>
 
     <div class="players-grid">
-        {% for player in players %}
-        <a href="/player/{{ player.id }}" class="player-card">
+        {% for player_id, player in players.items() %}
+        <a href="{{ url_for('player_detail', player_id=player_id) }}" class="player-card">
             <h2>{{ player.name }}</h2>
             <div class="player-stats">
                 <div class="stat-item">
@@ -104,11 +104,11 @@
                 </div>
                 <div class="stat-item">
                     <div class="stat-label">Goals</div>
-                    <div class="stat-value">{{ player.goals }}</div>
+                    <div class="stat-value">{{ player.stats.goals }}</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-label">Assists</div>
-                    <div class="stat-value">{{ player.assists }}</div>
+                    <div class="stat-value">{{ player.stats.assists }}</div>
                 </div>
             </div>
         </a>

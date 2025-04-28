@@ -109,6 +109,47 @@ def make_radar_chart(player_id):
     
     return base64.b64encode(img.getvalue()).decode()
 
+def make_positions_chart(players_data):
+    """Create a bar chart showing distribution of player positions"""
+    df = pd.DataFrame(players_data)
+    position_counts = df['position'].value_counts()
+    
+    fig = plt.figure(figsize=(8, 5))
+    plt.bar(position_counts.index, position_counts.values, color='skyblue')
+    plt.title('Player Positions Distribution')
+    plt.xlabel('Position')
+    plt.ylabel('Number of Players')
+    plt.xticks(rotation=45, ha='right')
+    plt.tight_layout() # Adjust layout
+
+    # Save to a bytes buffer
+    img = io.BytesIO()
+    plt.savefig(img, format='png', bbox_inches='tight')
+    img.seek(0)
+    plt.close()
+    
+    return base64.b64encode(img.getvalue()).decode()
+
+def make_age_distribution_chart(players_data):
+    """Create a histogram showing distribution of player ages"""
+    df = pd.DataFrame(players_data)
+    ages = df['age']
+    
+    fig = plt.figure(figsize=(8, 5))
+    plt.hist(ages, bins=5, color='lightcoral', edgecolor='black') # Adjust bins as needed
+    plt.title('Player Age Distribution')
+    plt.xlabel('Age')
+    plt.ylabel('Number of Players')
+    plt.tight_layout() # Adjust layout
+
+    # Save to a bytes buffer
+    img = io.BytesIO()
+    plt.savefig(img, format='png', bbox_inches='tight')
+    img.seek(0)
+    plt.close()
+    
+    return base64.b64encode(img.getvalue()).decode()
+
 @app.route('/')
 def home():
     """Show the main page with all players"""
@@ -140,6 +181,32 @@ def compare_players():
                          player1=player1, 
                          player2=player2,
                          players=players)
+
+@app.route('/analytics')
+def analytics():
+    """Analytics page showing summary stats and charts"""
+    players_list = list(players.values()) # Convert to list for multiple uses
+    
+    # Calculate summary statistics
+    num_players = len(players_list)
+    total_age = sum(p['age'] for p in players_list)
+    total_goals = sum(p['stats']['goals'] for p in players_list)
+    
+    avg_age = round(total_age / num_players, 1) if num_players > 0 else 0
+    avg_goals = round(total_goals / num_players, 1) if num_players > 0 else 0
+    
+    # Generate charts
+    pos_chart = make_positions_chart(players_list) if num_players > 0 else None
+    age_dist_chart = make_age_distribution_chart(players_list) if num_players > 0 else None
+
+    # Pass data to the template
+    return render_template('analytics.html', 
+                           players=players_list, 
+                           total_players=num_players, 
+                           avg_age=avg_age, 
+                           avg_goals=avg_goals,
+                           positions_chart=pos_chart,
+                           age_chart=age_dist_chart)
 
 if __name__ == '__main__':
     app.run(debug=True) 

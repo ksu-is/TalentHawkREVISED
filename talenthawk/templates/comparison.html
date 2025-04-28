@@ -200,13 +200,13 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/">Players</a>
+                        <a class="nav-link" href="{{ url_for('home') }}">Players</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="/comparison">Comparison</a>
+                        <a class="nav-link active" href="{{ url_for('compare_players') }}">Comparison</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/analytics">Analytics</a>
+                        <a class="nav-link" href="{{ url_for('analytics') }}">Analytics</a>
                     </li>
                 </ul>
             </div>
@@ -217,7 +217,7 @@
     <div class="container my-4">
         <div class="row">
             <div class="col-md-12">
-                <a href="/" class="btn btn-outline-primary mb-3">&larr; Back to Players</a>
+                <a href="{{ url_for('home') }}" class="btn btn-outline-primary mb-3">&larr; Back to Players</a>
                 <h1 class="mb-4">Player Comparison</h1>
             </div>
         </div>
@@ -228,7 +228,7 @@
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">Select Players to Compare</h5>
-                        <form method="GET" action="/compare">
+                        <form method="GET" action="{{ url_for('compare_players') }}">
                             <div class="row">
                                 <div class="col-md-5">
                                     <div class="form-group mb-3">
@@ -337,6 +337,40 @@
                 </div>
             </div>
         </div>
+        {% endif %}
+
+        {% if player1 and player2 %}
+        <!-- Comparison Results -->
+        <div class="comparison-grid">
+            <div class="player-card">
+                <h3 class="player-name">{{ player1.name }}</h3>
+                <p class="player-info">{{ player1.position }} | Age: {{ player1.age }}</p>
+                <h4>Stats</h4>
+                <table class="stats-table">
+                    {% for stat, value in player1.stats.items() %}
+                    <tr>
+                        <td>{{ stat|title }}</td>
+                        <td>{{ value }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+            <div class="player-card">
+                <h3 class="player-name">{{ player2.name }}</h3>
+                <p class="player-info">{{ player2.position }} | Age: {{ player2.age }}</p>
+                <h4>Stats</h4>
+                <table class="stats-table">
+                    {% for stat, value in player2.stats.items() %}
+                    <tr>
+                        <td>{{ stat|title }}</td>
+                        <td>{{ value }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <p style="text-align: center; margin-top: 20px;">Select two players using the form above to see a comparison.</p>
         {% endif %}
     </div>
 

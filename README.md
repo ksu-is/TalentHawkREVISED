@@ -79,10 +79,7 @@ talenthawk/
 The app comes with sample data for these players:
 - Lionel Messi
 - Cristiano Ronaldo
-- Erling Haaland
-- Kylian Mbappé
 - Kevin De Bruyne
-- Mohamed Salah
 
 ## Testing
 
